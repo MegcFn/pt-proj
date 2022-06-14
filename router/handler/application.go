@@ -12,6 +12,7 @@ import (
 func CreateApplication(c *gin.Context) {
 	//validate input
 	var input model.CreateApplicationInput
+	var application model.Application
 	db := util.GetDB()
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -19,12 +20,12 @@ func CreateApplication(c *gin.Context) {
 		return
 	}
 
-	if result := db.Where("sid = ? AND grayscale = ?", input.Sid, input.Grayscale); result.RowsAffected == 0 {
+	if result := db.Where("sid = ? AND grayscale = ?", input.Sid, input.Grayscale).First(&application); result.RowsAffected != 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "申请已存在，请等待审批！"})
 		return
 	}
 
-	application := model.Application{Username: input.Username, Sid: input.Sid, Grayscale: input.Grayscale, Reason: input.Reason}
+	application = model.Application{Username: input.Username, Sid: input.Sid, Grayscale: input.Grayscale, Reason: input.Reason}
 
 	db.Create(&application)
 
